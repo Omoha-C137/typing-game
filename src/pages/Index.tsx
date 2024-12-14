@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/components/ui/use-toast';
-
-const SAMPLE_TEXT = "The quick brown fox jumps over the lazy dog";
+import { getRandomSentence } from '../data/sentences';
 
 interface TypingStats {
   wpm: number;
@@ -12,6 +11,7 @@ interface TypingStats {
 
 const Index = () => {
   const [currentText, setCurrentText] = useState('');
+  const [targetText, setTargetText] = useState(getRandomSentence());
   const [isStarted, setIsStarted] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [stats, setStats] = useState<TypingStats | null>(null);
@@ -24,7 +24,7 @@ const Index = () => {
     const wordsTyped = currentText.trim().split(' ').length;
     const wpm = Math.round((wordsTyped / timeElapsed) * 60);
     
-    const correctChars = currentText.split('').filter((char, i) => char === SAMPLE_TEXT[i]).length;
+    const correctChars = currentText.split('').filter((char, i) => char === targetText[i]).length;
     const accuracy = Math.round((correctChars / currentText.length) * 100);
 
     return {
@@ -32,7 +32,7 @@ const Index = () => {
       accuracy,
       time: Math.round(timeElapsed)
     };
-  }, [currentText, startTime]);
+  }, [currentText, startTime, targetText]);
 
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
     if (!isStarted) {
@@ -48,7 +48,7 @@ const Index = () => {
     if (e.key.length === 1) {
       setCurrentText(prev => {
         const newText = prev + e.key;
-        if (newText.length === SAMPLE_TEXT.length) {
+        if (newText.length === targetText.length) {
           const finalStats = calculateStats();
           if (finalStats) {
             setStats(finalStats);
@@ -58,10 +58,10 @@ const Index = () => {
             });
           }
         }
-        return newText.length <= SAMPLE_TEXT.length ? newText : prev;
+        return newText.length <= targetText.length ? newText : prev;
       });
     }
-  }, [isStarted, calculateStats, toast]);
+  }, [isStarted, calculateStats, toast, targetText]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress);
@@ -73,6 +73,7 @@ const Index = () => {
     setIsStarted(false);
     setStartTime(null);
     setStats(null);
+    setTargetText(getRandomSentence());
   };
 
   return (
@@ -109,7 +110,7 @@ const Index = () => {
           transition={{ delay: 0.2 }}
         >
           <div className="typing-text text-xl leading-relaxed mb-4">
-            {SAMPLE_TEXT.split('').map((char, index) => {
+            {targetText.split('').map((char, index) => {
               const userChar = currentText[index];
               const isActive = index === currentText.length;
               
